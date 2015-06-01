@@ -141,7 +141,7 @@ class UserStats extends React.Component {
   render() {
     return (
       <div>
-        <h2>User Stats</h2>
+        <h2>User Stats (pre-broken)</h2>
         Num users: {this.props.num}
       </div>
     )
