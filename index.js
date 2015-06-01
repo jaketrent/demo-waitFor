@@ -20,63 +20,73 @@ var actions = {
 
 // ------------ ORDER MATTERS
 // ------------ Summary store is registered *first* to create a potential problem
-var userStatsStore = assign({}, EventEmitter.prototype, {
+@autobind
+class UserStatsStore extends EventEmitter {
+  constructor() {
+    super()
+    this._num = 0
+    this.dispatchToken = appDispatcher.register(this.messageCallback)
+  }
   getNum() {
     return this._num
-  },
+  }
   listen(listener) {
     this.addListener('change', listener)
-  },
+  }
   unlisten(listener) {
     this.removeListener('change', listener)
-  },
+  }
   emitChange() {
     this.emit('change')
   }
-})
-userStatsStore.dispatchToken = appDispatcher.register(function (payload) {
-  switch (payload.actionType) {
-    case 'ADD_USER':
-      // -------- UNCOMMENT THIS
-      // -------- To see the stats stay in sync with user updates
-      //appDispatcher.waitFor([ usersStore.dispatchToken ])
-      var users = usersStore.getUsers()
-      if (users)
-        this._num = users.length
-      this.emitChange()
-      break
+  messageCallback(payload) {
+    switch (payload.actionType) {
+      case 'ADD_USER':
+        // -------- UNCOMMENT THIS
+        // -------- To see the stats stay in sync with user updates
+        //appDispatcher.waitFor([ usersStore.dispatchToken ])
+        var users = usersStore.getUsers()
+        if (users)
+          this._num = users.length
+        this.emitChange()
+        break
+    }
   }
-}.bind(userStatsStore))
+}
+var userStatsStore = new UserStatsStore()
 
-
-var usersStore = assign({}, EventEmitter.prototype, {
+@autobind
+class UsersStore extends EventEmitter {
+  constructor() {
+    super()
+    this._users = []
+    this.dispatchToken = appDispatcher.register(this.messageCallback)
+  }
   _addUser(user) {
-    if (!Array.isArray(this._users))
-      this._users = []
-
     this._users.push(user)
-  },
+  }
   getUsers() {
     return this._users
-  },
+  }
   listen(listener) {
     this.addListener('change', listener)
-  },
+  }
   unlisten(listener) {
     this.removeListener('change', listener)
-  },
+  }
   emitChange() {
     this.emit('change')
   }
-})
-usersStore.dispatchToken = appDispatcher.register(function (payload) {
-  switch (payload.actionType) {
-    case 'ADD_USER':
-      this._addUser(payload.user)
-      this.emitChange()
-      break
+  messageCallback(payload) {
+    switch (payload.actionType) {
+      case 'ADD_USER':
+        this._users.push(payload.user)
+        this.emitChange()
+        break
+    }
   }
-}.bind(usersStore))
+}
+var usersStore = new UsersStore()
 
 @autobind
 class UserForm extends React.Component {
